@@ -23,6 +23,7 @@ app.post("/", function(req, res) {
 
   var formData = querystring.stringify(form);
   var contentLength = formData.length;
+
   request(
     {
       headers: {
@@ -38,7 +39,50 @@ app.post("/", function(req, res) {
       var $ = cheerio.load(body);
 
       var saldoDisponivel = $("#disponivel").val();
-      res.json(saldoDisponivel);
+
+      if (saldoDisponivel != undefined) {
+        res.send({ saldoDisponivel: saldoDisponivel });
+      }
+
+      var msgErro = $(".caixaErro .msgErro")
+        .text()
+        .trim();
+
+      res.send({ msg: msgErro });
+    }
+  );
+});
+
+app.post("/novaSenha", function(req, res) {
+  var form = {
+    numeroCartaoFiltro: req.body["login"],
+    antigaSenha: req.body["senhaAntiga"],
+    novaSenha: req.body["novaSenha"],
+    confirmarNovaSenha: req.body["novaSenha"]
+  };
+
+  var formData = querystring.stringify(form);
+  var contentLength = formData.length;
+
+  request(
+    {
+      headers: {
+        "Content-Length": contentLength,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      uri:
+        "https://portador.banricard.com.br/banricard/LoginModuloCliente?acao=alterarSenha",
+      body: formData,
+      method: "POST"
+    },
+    function(err, response, body) {
+      var $ = cheerio.load(body);
+
+      var msgErro = $(".caixaErro .msgErro")
+        .text()
+        .trim();
+      console.log($.html());
+      res.send($.html());
     }
   );
 });
